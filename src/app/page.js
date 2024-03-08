@@ -1,95 +1,125 @@
-import Image from "next/image";
+"use client"
+
 import styles from "./page.module.css";
+import TextField from '@mui/material/TextField';
+import { Button, Snackbar } from "@mui/material";
+import { useState, useEffect } from 'react';
+import { setKeyValue, getKey } from "@/api/lru_cache_api";
+
 
 export default function Home() {
+
+  const [key, setKey] = useState("");
+  const [value, setValue] = useState("");
+  const [expiration, setExpiration] = useState("");
+  const [open, setOpen] = useState(false);
+  const [apiMessage, setApiMessage] = useState("");
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+
+  const onHandleChange = (event) => {
+    if (event.target.id === "key")
+      setKey(event.target.value);
+    else if (event.target.id === "value")
+      setValue(event.target.value);
+    else if (event.target.id === "expiration")
+      setExpiration(event.target.value);
+  }
+
+  const checkFields = () => {
+    if (key === "" || value === "")
+      return true;
+    return false;
+  }
+
+  const clickedSet = () => {
+    const body = {
+      key,
+      value
+    }
+    if(expiration !== "")
+    body.expiration = expiration;
+
+    setKeyValue(body)
+      .then(response => {
+        setApiMessage(response.message);
+        handleClick();
+        setKey("");
+        setValue("");
+        setExpiration("");
+      })
+      .catch(error => {
+        setApiMessage(error.message);
+        handleClick();
+      })
+  }
+
+  const clickedGet = () => {
+    getKey(key)
+      .then(response => {
+        setKey(response.key);
+        setValue(response.value !== null ?response.value: "");
+        setExpiration("");
+      })
+      .catch(error => {
+        console.log(error.message);
+      })
+  }
+
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>
+      <div>
+        <TextField className={styles.textFieldSizes}
+          id="key"
+          label="Key*"
+          value={key}
+          variant="outlined"
+          onChange={event => onHandleChange(event)}
         />
+        <TextField
+          className={styles.textFieldSizes}
+          id="value"
+          value={value}
+          label="Value*"
+          variant="outlined"
+          onChange={event => onHandleChange(event)}
+        />
+        <TextField
+          className={styles.textFieldSizes}
+          id="expiration"
+          value={expiration}
+          label="Expiration"
+          variant="outlined"
+          onChange={event => onHandleChange(event)} />
+
+        <Button
+          className={styles.textFieldSizes}
+          variant="contained"
+          onClick={clickedGet}>GET</Button>
+        <Button
+          className={styles.textFieldSizes}
+          variant="outlined"
+          disabled={checkFields()}
+          onClick={clickedSet}
+        >SET</Button>
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <Snackbar
+        open={open}
+        autoHideDuration={2000}
+        onClose={handleClose}
+        message={apiMessage}
+      />
+    </>
   );
 }
