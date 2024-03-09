@@ -37,7 +37,7 @@ export default function Home() {
   }
 
   const checkFields = () => {
-    if (key === "" || value === "")
+    if (key === "" || value === "" || expiration === "")
       return true;
     return false;
   }
@@ -99,7 +99,7 @@ export default function Home() {
           className={styles.textFieldSizes}
           id="expiration"
           value={expiration}
-          label="Expiration"
+          label="Expiration*"
           variant="outlined"
           onChange={event => onHandleChange(event)} />
 
